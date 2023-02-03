@@ -8,6 +8,11 @@ const routes = Router();
 
 interface MulterFile extends Express.MulterS3.File, Express.Multer.File {}
 
+routes.get("/posts", async (req: Request, res: Response) => {
+  const posts = await Post.find();
+  return res.json(posts);
+});
+
 routes.post(
   "/posts",
   multer(multerConfig).single("file"),
@@ -27,5 +32,11 @@ routes.post(
     return res.send(post);
   }
 );
+
+routes.delete("/posts/:id", async (req: Request, res: Response) => {
+  const post = await Post.findById(req.params.id);
+  post?.remove();
+  return res.json(post);
+});
 
 export default routes;

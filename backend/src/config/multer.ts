@@ -5,10 +5,27 @@ import crypto from "crypto";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
 
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.AWS_SCRET_ACCESS_KEY;
+const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
+const AWS_SCRET_ACCESS_KEY = process.env.AWS_SCRET_ACCESS_KEY;
 
-if (!accessKeyId || !secretAccessKey) {
+enum MulterStorageTypes {
+  s3 = "s3",
+  local = "local",
+}
+
+let STORAGE_TYPE: MulterStorageTypes = MulterStorageTypes.local;
+
+switch (process.env.STORAGE_TYPE) {
+  case MulterStorageTypes.s3:
+    STORAGE_TYPE = MulterStorageTypes.s3;
+    break;
+
+  case MulterStorageTypes.local:
+    STORAGE_TYPE = MulterStorageTypes.local;
+    break;
+}
+
+if (!AWS_ACCESS_KEY_ID || !AWS_SCRET_ACCESS_KEY) {
   throw new Error("Missing AWS credentials.");
 }
 
@@ -33,8 +50,8 @@ const storageTypes = {
     s3: new S3Client({
       region: process.env.AWS_DEFAULT_REGION,
       credentials: {
-        accessKeyId,
-        secretAccessKey,
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SCRET_ACCESS_KEY,
       },
     }),
     bucket: "miguelsrbucket",
@@ -54,7 +71,7 @@ const storageTypes = {
 
 export default <Options>{
   dest: path.resolve(__dirname, "..", "..", "tmp", "uploads"),
-  storage: storageTypes["s3"],
+  storage: storageTypes[STORAGE_TYPE],
   limits: {
     fileSize: 2 * 1024 * 1024,
   },

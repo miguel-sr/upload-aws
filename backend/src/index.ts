@@ -4,19 +4,28 @@ dotenv.config();
 import express from "express";
 import morgan from "morgan";
 import mongoose from "mongoose";
+import path from "path";
 
 import routes from "./routes";
 
 const app = express();
 
+if (!process.env.MONGO_URL) {
+  throw new Error("Missing Mongo URL");
+}
+
 mongoose.set("strictQuery", false);
-mongoose.connect("mongodb://localhost:27017/upload-aws").then(() => {
+mongoose.connect(process.env.MONGO_URL).then(() => {
   console.log("==> MongoDB Connected");
 });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+app.use(
+  "/files",
+  express.static(path.resolve(__dirname, "..", "tmp", "uploads"))
+);
 
 app.use(routes);
 
