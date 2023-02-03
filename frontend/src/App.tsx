@@ -12,42 +12,67 @@ import { FilesList } from "./components/FilesList";
 import api from "./services/api";
 
 export interface INewFile {
-  file: File;
+  file?: File;
   id: string;
   name: string;
-  readableSize:
-    | string
-    | number
-    | any[]
-    | {
-        value: any;
-        symbol: any;
-        exponent: number;
-        unit: string;
-      };
+  readableSize: string;
   preview: string;
   progress: number;
   uploaded: boolean;
-  error: boolean;
-  url: null;
+  error?: boolean;
+  url: null | string;
+}
+
+interface MongoFile {
+  _id: string;
+  name: string;
+  size: number;
+  key: string;
+  url: string;
 }
 
 function App() {
   const [uploadedFiles, setUploadedFiles] = useState<INewFile[]>([]);
   const [newFiles, setNewFiles] = useState<INewFile[]>([]);
 
+  useEffect(() => {
+    getFiles();
+  }, []);
+
+  async function getFiles() {
+    const response = await api.get("/posts");
+    const data: MongoFile[] = response.data;
+    const teste = data.map(
+      (file) =>
+        ({
+          id: file._id,
+          name: file.name,
+          readableSize: filesize(file.size).toString(),
+          preview: file.url,
+          progress: 100,
+          uploaded: true,
+          url: file.url,
+        } as INewFile),
+    );
+
+    setUploadedFiles(teste);
+  }
+
   const handleUpload = (files: File[]) => {
-    const newFiles = files.map((file) => ({
-      file,
-      id: uniqueId(),
-      name: file.name,
-      readableSize: filesize(file.size),
-      preview: URL.createObjectURL(file),
-      progress: 0,
-      uploaded: false,
-      error: false,
-      url: null,
-    }));
+    const newFiles = files.map(
+      (file) =>
+        ({
+          file,
+          id: uniqueId(),
+          name: file.name,
+          readableSize: filesize(file.size).toString(),
+          preview: URL.createObjectURL(file),
+          progress: 0,
+          uploaded: false,
+          error: false,
+          url: null,
+        } as INewFile),
+    );
 
     setNewFiles(newFiles);
     setUploadedFiles(uploadedFiles.concat(newFiles));
@@ -72,20 +97,19 @@ function App() {
   const processUpload = (uploadedFile: INewFile) => {
     const data = new FormData();
 
-    data.append("file", uploadedFile.file, uploadedFile.name);
+    if (uploadedFile.file) {
+      data.append("file", uploadedFile.file, uploadedFile.name);
+    }
 
     api
       .post("/posts", data, {
         onUploadProgress: (e) => {
-          const progress = Math.round((e.loaded * 100) / e.total!);
-
           updateFile(uploadedFile.id, {
-            progress,
+            progress: e.total ? Math.round((e.loaded * 100) / e.total) : 0,
           });
         },
       })
       .then((response) => {
-        console.log(response);
         updateFile(uploadedFile.id, {
           uploaded: true,
           id: response.data._id,

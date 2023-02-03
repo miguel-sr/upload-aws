@@ -18,6 +18,10 @@ routes.post(
   "/posts",
   multer(multerConfig).single("file"),
   async (req: Request, res: Response) => {
+    if (!req.file) {
+      return res.sendStatus(400);
+    }
+
     const {
       originalname: name,
       size,
