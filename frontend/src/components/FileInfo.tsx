@@ -1,12 +1,13 @@
 import { Preview } from "./Preview";
 
-import { IFilesToUpload } from "../App";
+import { INewFile } from "../App";
 
 interface IFileInfoParams {
-  file: IFilesToUpload;
+  file: INewFile;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export function FileInfo({ file }: IFileInfoParams) {
+export function FileInfo({ file, onDelete }: IFileInfoParams) {
   return (
     <div className="flex items-center">
       <Preview src={file.preview} />
@@ -15,7 +16,10 @@ export function FileInfo({ file }: IFileInfoParams) {
         <span className="text-sm text-zinc-400">
           {file.readableSize.toString()}
           {!!file.url && (
-            <button className="border-0 bg-transparent text-red-600 ml-2 cursor-pointer">
+            <button
+              onClick={() => onDelete(file.id)}
+              className="border-0 bg-transparent text-red-600 ml-2 cursor-pointer"
+            >
               Excluir
             </button>
           )}

@@ -75,9 +75,12 @@ export default <Options>{
       "image/png",
       "image/gif",
     ];
-
     if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
+      try {
+        cb(null, true);
+      } catch (error) {
+        throw new Error("Image is too large.");
+      }
     } else {
       cb(new Error("Invalid file type."));
     }

@@ -23,7 +23,10 @@ export function Upload({ onUpload }: IUploadParams) {
   });
 
   useEffect(() => {
-    onUpload(acceptedFiles);
+    if (acceptedFiles.length > 0) {
+      onUpload(acceptedFiles);
+    }
+    acceptedFiles.length = 0;
   }, [acceptedFiles]);
 
   return (
