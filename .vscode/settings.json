@@ -8,6 +8,8 @@
     "*.css": "tailwindcss"
   },
   "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
     "strings": true
   }
 }
