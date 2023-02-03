@@ -2,8 +2,15 @@ import { useDropzone } from "react-dropzone";
 
 import { clsx } from "clsx";
 
-export function Upload() {
+import { useEffect } from "react";
+
+interface IUploadParams {
+  onUpload: (files: File[]) => void;
+}
+
+export function Upload({ onUpload }: IUploadParams) {
   const {
+    acceptedFiles,
     isDragActive,
     isDragAccept,
     isDragReject,
@@ -14,6 +21,10 @@ export function Upload() {
       "image/*": [],
     },
   });
+
+  useEffect(() => {
+    onUpload(acceptedFiles);
+  }, [acceptedFiles]);
 
   return (
     <div
