@@ -1,12 +1,9 @@
-import { Express } from "express";
 import multer, { Options } from "multer";
 import path from "path";
 import crypto from "crypto";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
-
-const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
-const AWS_SCRET_ACCESS_KEY = process.env.AWS_SCRET_ACCESS_KEY;
+import awsConnectParams from "./aws-connect-params";
 
 enum MulterStorageTypes {
   s3 = "s3",
@@ -23,10 +20,6 @@ switch (process.env.STORAGE_TYPE) {
   case MulterStorageTypes.local:
     STORAGE_TYPE = MulterStorageTypes.local;
     break;
-}
-
-if (!AWS_ACCESS_KEY_ID || !AWS_SCRET_ACCESS_KEY) {
-  throw new Error("Missing AWS credentials.");
 }
 
 interface MulterFile extends Express.MulterS3.File, Express.Multer.File {}
@@ -50,11 +43,11 @@ const storageTypes = {
     s3: new S3Client({
       region: process.env.AWS_DEFAULT_REGION,
       credentials: {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SCRET_ACCESS_KEY,
+        accessKeyId: awsConnectParams.AWS_ACCESS_KEY_ID,
+        secretAccessKey: awsConnectParams.AWS_SECRET_ACCESS_KEY,
       },
     }),
-    bucket: "miguelsrbucket",
+    bucket: awsConnectParams.AWS_BUCKET,
     contentType: multerS3.AUTO_CONTENT_TYPE,
     acl: "public-read",
     key: (req, file, cb) => {

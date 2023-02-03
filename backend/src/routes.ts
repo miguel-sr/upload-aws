@@ -3,6 +3,7 @@ import multer from "multer";
 import multerConfig from "./config/multer";
 
 import Post from "./models/post";
+import { removeFile } from "./utils/remove-file";
 
 const routes = Router();
 
@@ -35,6 +36,12 @@ routes.post(
 
 routes.delete("/posts/:id", async (req: Request, res: Response) => {
   const post = await Post.findById(req.params.id);
+
+  if (!post?.key) {
+    throw new Error("Missing Object Key.");
+  }
+
+  removeFile(post?.key);
   post?.remove();
   return res.json(post);
 });
