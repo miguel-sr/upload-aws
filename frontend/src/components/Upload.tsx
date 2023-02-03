@@ -11,6 +11,7 @@ interface IUploadParams {
 export function Upload({ onUpload }: IUploadParams) {
   const {
     acceptedFiles,
+    fileRejections,
     isDragActive,
     isDragAccept,
     isDragReject,
@@ -20,7 +21,16 @@ export function Upload({ onUpload }: IUploadParams) {
     accept: {
       "image/*": [],
     },
+    maxFiles: 1,
   });
+
+  // useEffect(() => {
+  //   fileRejections.forEach((rej) => {
+  //     rej.errors.forEach((tes) => {
+  //       console.log(tes.message);
+  //     });
+  //   });
+  // }, [fileRejections]);
 
   useEffect(() => {
     if (acceptedFiles.length > 0) {
@@ -50,9 +60,7 @@ export function Upload({ onUpload }: IUploadParams) {
           "text-red-600": isDragReject,
         })}
       >
-        {!isDragActive ? "Insira arquivos aqui..." : null}
-        {isDragAccept ? "Solte os arquivos aqui" : null}
-        {isDragReject ? "Arquivo não suportado" : null}
+        Arraste alguma foto aqui...
       </p>
     </div>
   );

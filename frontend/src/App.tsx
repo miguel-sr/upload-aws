@@ -33,7 +33,7 @@ interface MongoFile {
 
 function App() {
   const [uploadedFiles, setUploadedFiles] = useState<INewFile[]>([]);
-  const [newFiles, setNewFiles] = useState<INewFile[]>([]);
+  const [uploadQueue, setUploadQueue] = useState<INewFile[]>([]);
 
   useEffect(() => {
     getFiles();
@@ -41,9 +41,8 @@ function App() {
 
   async function getFiles() {
     const response = await api.get("/posts");
-    const data: MongoFile[] = response.data;
-    const teste = data.map(
-      (file) =>
+    const filesInDatabase = response.data.map(
+      (file: MongoFile) =>
         ({
           id: file._id,
           name: file.name,
@@ -55,34 +54,50 @@ function App() {
         } as INewFile),
     );
 
-    setUploadedFiles(teste);
+    setUploadedFiles(filesInDatabase);
   }
 
   const handleUpload = (files: File[]) => {
-    const newFiles = files.map(
-      (file) =>
-        ({
-          file,
-          id: uniqueId(),
-          name: file.name,
-          readableSize: filesize(file.size).toString(),
-          preview: URL.createObjectURL(file),
-          progress: 0,
-          uploaded: false,
-          error: false,
-          url: null,
-        } as INewFile),
+    const newUploadedFiles = files.map((file) =>
+      file.size <= 2 * 1024 * 1024
+        ? ({
+            file,
+            id: uniqueId(),
+            name: file.name,
+            readableSize: filesize(file.size).toString(),
+            preview: URL.createObjectURL(file),
+            progress: 0,
+            uploaded: false,
+            error: false,
+            url: null,
+          } as INewFile)
+        : ({
+            file,
+            id: uniqueId(),
+            name: file.name,
+            readableSize: filesize(file.size).toString(),
+            preview: URL.createObjectURL(file),
+            progress: 0,
+            uploaded: false,
+            error: true,
+            url: null,
+          } as INewFile),
     );
 
-    setNewFiles(newFiles);
-    setUploadedFiles(uploadedFiles.concat(newFiles));
+    setUploadedFiles(uploadedFiles.concat(newUploadedFiles));
+    setUploadQueue(
+      uploadQueue.concat(
+        newUploadedFiles.filter((file) => file.error !== true),
+      ),
+    );
   };
 
   useEffect(() => {
-    uploadedFiles.forEach((file) => {
+    uploadQueue.forEach((file) => {
       processUpload(file);
     });
-  }, [newFiles]);
+    setUploadQueue([]);
+  }, [uploadQueue.length !== 0]);
 
   const updateFile = (id: string, data: Record<string, boolean | number>) => {
     setUploadedFiles(
@@ -133,7 +148,7 @@ function App() {
     <div className="h-full flex justify-center items-center">
       <div className="w-full max-w-md m-8 bg-white rounded-md p-3">
         <Upload onUpload={handleUpload} />
-        {!!uploadedFiles.length && (
+        {!!uploadedFiles && (
           <FilesList files={uploadedFiles} onDelete={handleDelete} />
         )}
       </div>

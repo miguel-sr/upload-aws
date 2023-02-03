@@ -7,6 +7,8 @@ import { removeFile } from "./utils/remove-file";
 
 const routes = Router();
 
+const upload = multer(multerConfig).single("file");
+
 interface MulterFile extends Express.MulterS3.File, Express.Multer.File {}
 
 routes.get("/posts", async (req: Request, res: Response) => {
@@ -14,10 +16,14 @@ routes.get("/posts", async (req: Request, res: Response) => {
   return res.json(posts);
 });
 
-routes.post(
-  "/posts",
-  multer(multerConfig).single("file"),
-  async (req: Request, res: Response) => {
+routes.post("/posts", (req: Request, res: Response) => {
+  upload(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).send(err);
+    } else if (err) {
+      return res.status(400).send(err);
+    }
+
     if (!req.file) {
       return res.sendStatus(400);
     }
@@ -35,8 +41,8 @@ routes.post(
       key,
     });
     return res.send(post);
-  }
-);
+  });
+});
 
 routes.delete("/posts/:id", async (req: Request, res: Response) => {
   const post = await Post.findById(req.params.id);
